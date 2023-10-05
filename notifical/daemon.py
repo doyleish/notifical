@@ -45,16 +45,16 @@ class EventLoop(object):
         cal = self.feed.fetch()
         next_wait = self.feed.refresh_time
         alerted = []
-    
+
         for event in cal.walk("VEVENT"):
             # times
             event_start = event['DTSTART'].dt
             event_uid = event['UID']
-            event_rid = event.get('RECURRENCE-ID','unique')
+            event_rid = event.get('RECURRENCE-ID','single')
             event_key = f"{event_uid}:{event_rid}"
             delta = event_start - reftime
             s = delta.total_seconds()
-    
+
             # event is in this search window
             #  fire_and_forget the notification fn
             if PRE_WARNING < s <= EVENT_LOOP_SPEED+PRE_WARNING+BUFFER:
@@ -65,17 +65,17 @@ class EventLoop(object):
                 until = event_start - now
                 asyncio.ensure_future(sleep_and_fire(until.total_seconds()-PRE_WARNING, location))
                 alerted.append(event_key)
-        
+
         return alerted
 
 class Daemon(object):
     def __init__(self, cfg: Config):
         self.loops = [ EventLoop(f) for f in cfg.feeds ]:
-    
-    async def run_async(self)
+
+    async def run_async(self):
         asyncio.gather(*[l.run_async() for l in self.loops])
-    
-    def run(self)
+
+    def run(self):
         asyncio.run(self.run_async())
 
 
