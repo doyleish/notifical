@@ -61,5 +61,3 @@ class Daemon(object):
 
     def run(self):
         asyncio.run(self.run_async())
-
-

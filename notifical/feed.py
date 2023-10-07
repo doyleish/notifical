@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Callable
 from dataclasses import dataclass
 from icalendar import Event, Calendar
 from datetime import datetime, timedelta
@@ -10,14 +10,14 @@ from itertools import product
 class EventMatch(object):
     unique_event_id: str
     ical_event: Event
-    fire_function: function
+    fire_function: Callable
     fire_time: datetime
 
 @dataclass
 class EventTrigger(object):
     summary_regex: Optional[re.Pattern] = None
     description_regex: Optional[re.Pattern] = None
-    trigger: function = lambda:None
+    trigger: Callable = lambda:None
     offset: int = 0
 
     @staticmethod
