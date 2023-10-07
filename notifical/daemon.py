@@ -28,7 +28,7 @@ class EventLoop(object):
         while True:
             results = await asyncio.gather(
                 self._schedule_near_events(last_events_alerted),
-                asyncio.sleep(self.feed.refresh_time)
+                asyncio.sleep(self.feed.refresh_interval)
             )
             last_events_alerted = results[0]
     
@@ -40,8 +40,8 @@ class EventLoop(object):
             if em.unique_event_id in already_alerted:
                 return False
             delta = em.fire_time - reftime
-            delta.total_seconds()
-            return 0 < em.fire_time <= self.feed.refresh_interval+BUFFER
+            delta_seconds = delta.total_seconds()
+            return 0 < delta_seconds <= self.feed.refresh_interval+BUFFER
             
         fireable = list(filter(_should_schedule, event_matches))
         for f in fireable:
@@ -57,7 +57,7 @@ class Daemon(object):
         self.loops = [ EventLoop(f) for f in feeds ]
 
     async def run_async(self):
-        asyncio.gather(*[l.run_async() for l in self.loops])
+        await asyncio.gather(*[l.run_async() for l in self.loops])
 
     def run(self):
         asyncio.run(self.run_async())

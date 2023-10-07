@@ -1,5 +1,5 @@
 from typing import List, Optional, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from icalendar import Event, Calendar
 from datetime import datetime, timedelta
 import re
@@ -32,7 +32,7 @@ class EventTrigger(object):
         if self.description_regex and not self.description_regex.search(edescription):
             return None
 
-        etime = event[self._ical_field()]
+        etime = event[self._ical_field()].dt
         odelta = timedelta(seconds=abs(self.offset))
         if self.offset < 0:
             fire_time = etime - odelta
@@ -68,7 +68,7 @@ class EventEndTrigger(EventTrigger):
 @dataclass
 class Feed(object):
     url: str
-    triggers: List[EventTrigger] = []
+    triggers: List[EventTrigger] = field(default_factory=lambda:[])
     refresh_interval: int = 300
 
     def fetch(self) -> List[EventMatch]:
