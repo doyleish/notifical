@@ -12,12 +12,15 @@ class EventMatch(object):
     ical_event: Event
     fire_function: Callable
     fire_time: datetime
+    error_handler: Optional[Callable]
 
 @dataclass
 class EventTrigger(object):
     summary_regex: Optional[re.Pattern] = None
     description_regex: Optional[re.Pattern] = None
     trigger: Callable = lambda:None
+    swallow_exception: bool = False
+    exception_handler: Optional[Callable] = None
     offset: int = 0
 
     @staticmethod
@@ -38,6 +41,10 @@ class EventTrigger(object):
             fire_time = etime - odelta
         else:
             fire_time = etime + odelta
+        
+        e_handle = self.exception_handler
+        if self.swallow_exception:
+            e_handle = lambda _: None
 
         event_uid = event['UID']
         event_rid = event.get('RECURRENCE-ID','single')
@@ -46,7 +53,8 @@ class EventTrigger(object):
             event_key,
             event,
             self.trigger,
-            fire_time
+            fire_time,
+            e_handle
         )
 
 @dataclass

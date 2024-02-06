@@ -13,11 +13,16 @@ from dataclasses import dataclass
 EVENT_LOOP_SPEED = 300 # polling frequency.  Must be > 2*BUFFER
 BUFFER = 20 # This should be at least 2x the time it takes to fetch cal and process
 
-async def sleep_and_fire(seconds, func):
+async def sleep_and_fire(seconds, func, error_handler):
     print(f"Waiting {seconds} seconds")
     await asyncio.sleep(seconds)
-    await func() 
-
+    if error_handler:
+        try:
+            await func()
+        except Exception as e:
+            error_handler(e)
+    else:
+        await func()
 
 @dataclass
 class EventLoop(object):
@@ -48,7 +53,7 @@ class EventLoop(object):
             now = datetime.now(timezone.utc)
             print(f"{now}: Firing for upcoming event")
             until = f.fire_time - now
-            asyncio.ensure_future(sleep_and_fire(until.total_seconds(), f.fire_function))
+            asyncio.ensure_future(sleep_and_fire(until.total_seconds(), f.fire_function, f.error_handler))
 
         return [ f.unique_event_id for f in fireable ]
 
